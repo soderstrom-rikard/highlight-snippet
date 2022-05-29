@@ -1,0 +1,86 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/rust.min.js"></script>
+
+<script>
+
+async function load_json(filePath)
+{
+    fetchResponse = await fetch(filePath);
+    return fetchResponse.json();
+}
+
+async function createStatusArea(identifier)
+{
+    preElement = document.createElement('pre');
+    preElement.id = identifier;
+
+    document.body.appendChild(preElement);
+}
+
+async function createSelectionBox(values, onChange)
+{
+    selectElement = document.createElement('select');
+    defaultOptionElement = document.createElement('option');
+    defaultOptionElement.value = "";
+    defaultOptionElement.innerHTML = "--Please choose an option--";
+    selectElement.appendChild(defaultOptionElement);
+
+    for (let value of values) {
+        optionElement = document.createElement('option');
+        optionElement.value = value;
+        optionElement.innerHTML = value;
+        selectElement.appendChild(optionElement);
+    }
+
+    selectElement.onchange = onChange;
+
+    document.body.appendChild(selectElement);
+}
+
+async function createThemedElement(code, options)
+{
+    codeElement = document.createElement('code');
+    codeElement.innerHTML = hljs.highlight(code, options).value;
+    preElement = document.createElement('pre');
+    preElement.appendChild(codeElement);
+    document.body.appendChild(preElement);
+}
+
+document.addEventListener("DOMContentLoaded", async (event) => {
+    createStatusArea("configStatus");
+
+    programmingLanguages = hljs.listLanguages();
+    createSelectionBox(programmingLanguages.sort(), function (changeEvent) {
+        console.log(changeEvent);
+        optionElement = changeEvent.srcElement.children[changeEvent.srcElement.selectedIndex];
+
+        statusArea = document.getElementById("configStatus");
+        statusArea.innerHTML = optionElement.value;
+    });
+
+    themes = await load_json("themes.json");
+    createSelectionBox(themes.map(function (theme) {
+        return theme.name;
+    }).sort(), function (changeEvent) {
+        console.log(changeEvent);
+        optionElement = changeEvent.srcElement.children[changeEvent.srcElement.selectedIndex];
+
+        statusArea = document.getElementById("configStatus");
+        statusArea.innerHTML = optionElement.value;
+    });
+
+    themesPretty = JSON.stringify(themes, null, 4);
+    await createThemedElement('<h1>Hello World!</h1>', {
+        language: 'xml',
+        ignoreIllegals: true
+    });
+    await createThemedElement(themesPretty, {language: 'json'});
+
+    console.log("DOM fully loaded and parsed");
+
+});
+
+
+</script>
