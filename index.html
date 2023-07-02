@@ -19,11 +19,12 @@ async function createStatusArea(identifier)
     document.body.appendChild(preElement);
 }
 
-async function createSelectionBox(values, onChange)
+async function createSelectionBox(identity, values, onChange)
 {
-    selectElement = document.createElement('select');
+    selectElement    = document.createElement('select');
+    selectElement.id = identity;
     defaultOptionElement = document.createElement('option');
-    defaultOptionElement.value = "";
+    defaultOptionElement.value = values[0];
     defaultOptionElement.innerHTML = "--Please choose an option--";
     selectElement.appendChild(defaultOptionElement);
 
@@ -48,28 +49,85 @@ async function createThemedElement(code, options)
     document.body.appendChild(preElement);
 }
 
+async function generateURI(language, theme,contentType, value)
+{
+    if (!value)
+    {
+        value = "<h1>Hello World!</h1>";
+    }
+
+    address = "https://172.29.141.55:8000";
+    path    = "/viewCode";
+    l       = `language=${encodeURIComponent(language)}`;
+    t       = `theme=${encodeURIComponent(theme)}`;
+    c       = `contentType=${encodeURIComponent(contentType)}`;
+    v       = `value=${encodeURIComponent(btoa(value))}`;
+    query   = `${l}&${t}&${c}&${v}`;
+
+    return encodeURI(`${address}${path}?${query}`);
+}
+
+async function createCodeArea(onChange)
+{
+    textElement = document.createElement('textarea');
+    textElement.id = 'codeArea';
+    document.body.appendChild(textElement);
+
+    textElement.onchange = onChange;
+}
+
+async function createPreview(language, theme,contentType, value)
+{
+    imgElement = document.createElement('img');
+    imgElement.id = 'preview';
+    document.body.appendChild(imgElement);
+
+    await updatePreview(imgElement, language, theme,contentType, value);
+}
+
+async function updatePreview(imgElement, language, theme,contentType, value)
+{
+    imgElement.src = await generateURI(language, theme, contentType, value);
+    imgElement.alt = 'render codeView image';
+}
+
+updatePreviewCallback = function (changeEvent) {
+    console.log(changeEvent);
+    languageSelection = document.getElementById('languageSelection');
+    themeSelection    = document.getElementById('themesSelection');
+    typeSelection     = document.getElementById('contentTypeSelection');
+    codeArea          = document.getElementById('codeArea');
+    preview           = document.getElementById("preview");
+    statusArea        = document.getElementById("configStatus");
+
+    selectedItemValue  = (element) => element.children[element.selectedIndex].value;
+
+    updatePreview(preview,
+        selectedItemValue(languageSelection),
+        selectedItemValue(themeSelection),
+        selectedItemValue(typeSelection),
+        codeArea.value);
+
+    statusArea.innerHTML = preview.src;
+}
+
 document.addEventListener("DOMContentLoaded", async (event) => {
     createStatusArea("configStatus");
-
     programmingLanguages = hljs.listLanguages();
-    createSelectionBox(programmingLanguages.sort(), function (changeEvent) {
-        console.log(changeEvent);
-        optionElement = changeEvent.srcElement.children[changeEvent.srcElement.selectedIndex];
+    themes               = await load_json("themes.json");
+    contentTypes         = await load_json("content-types.json");
 
-        statusArea = document.getElementById("configStatus");
-        statusArea.innerHTML = optionElement.value;
-    });
+    createSelectionBox('languageSelection', programmingLanguages.sort(), updatePreviewCallback);
 
-    themes = await load_json("themes.json");
-    createSelectionBox(themes.map(function (theme) {
+    createSelectionBox('themesSelection', themes.map(function (theme) {
         return theme.name;
-    }).sort(), function (changeEvent) {
-        console.log(changeEvent);
-        optionElement = changeEvent.srcElement.children[changeEvent.srcElement.selectedIndex];
+    }).sort(), updatePreviewCallback);
 
-        statusArea = document.getElementById("configStatus");
-        statusArea.innerHTML = optionElement.value;
-    });
+    createSelectionBox('contentTypeSelection',
+        Object.values(contentTypes).sort(), updatePreviewCallback);
+    createCodeArea(updatePreviewCallback);
+
+    preview = await createPreview('ada', 'solarized', 'img/svg+xml', '0');
 
     themesPretty = JSON.stringify(themes, null, 4);
     await createThemedElement('<h1>Hello World!</h1>', {

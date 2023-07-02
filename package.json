@@ -1,0 +1,34 @@
+{
+  "name": "highlight-snippet",
+  "version": "0.0.1",
+  "description": "transforms text based on url and responds with choosen content-type",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soderstrom-rikard/highlight-snippet.git"
+  },
+  "keywords": [
+    "code",
+    "highlight",
+    "image",
+    "text",
+    "svg",
+    "transform"
+  ],
+  "author": "Rikard Söderström",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/soderstrom-rikard/highlight-snippet/issues"
+  },
+  "homepage": "https://github.com/soderstrom-rikard/highlight-snippet#readme",
+  "dependencies": {
+    "highlight.js": "^11.8.0",
+    "node-forge": "^1.3.1",
+    "pegjs": "^0.10.0",
+    "xmldom": "^0.6.0"
+  }
+}
